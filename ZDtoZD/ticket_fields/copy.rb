@@ -14,13 +14,13 @@ Target = ZendeskAPI::Connect.new(
   password: 'Lightning22'
 )
 SystemFields = [
-  'subject',
-  'description',
-  'status',
-  'tickettype',
-  'priority',
-  'group',
-  'assignee'
+  'subject',      #1
+  'description',  #2
+  'status',       #3
+  'tickettype',   #4
+  'priority',     #5
+  'group',        #6
+  'assignee'      #7
 ]
 
 
