@@ -1,5 +1,5 @@
-require '/LIBS/gentools'
-require '/LIBS/new_API'
+require '../../LIBS/gentools'
+require '../../LIBS/new_API'
 require 'rinothread'
 
 
@@ -25,49 +25,80 @@ SystemFields = [
 
 
 # Get TARGET Fields
-target_key = {}
-rino = Rino::Tusk.new 10
-pages = (Target.GetFields(per_page: 1)[:body]['count'].to_f/100).ceil
-pages.times do |page|
-  
-  page += 1
-  
-  rino.queue do
+1.times do
+  #break
+  target_key = {}
+  rino = Rino::Tusk.new 10
+  pages = (Target.GetFields(per_page: 1)[:body]['count'].to_f/100).ceil
+  pages.times do |page|
     
-    call = Target.GetFields(page: page)
-    call[:body]['ticket_fields'].each do |field|
+    page += 1
+    
+    rino.queue do
       
-      target_key = target_key.merge(NW(field['title']) => field)
-      JP %{[#{field['type']}] :: #{field['title']}\n}
+      call = Target.GetFields(page: page)
+      call[:body]['ticket_fields'].each do |field|
+        
+        target_key = target_key.merge(NW(field['title']) => field)
+        JP %{[#{field['type']}] :: #{field['title']}\n}
+        
+      end
       
     end
     
   end
-  
+  rino.execute
+  Write 'target.json',target_key.to_json
+
 end
-rino.execute
-Write 'target.json',target_key.to_json
+
 
 # Get SOURCE Fields
-source_key = {}
-rino = Rino::Tusk.new 10
-pages = (Source.GetFields(per_page: 1)[:body]['count'].to_f/100).ceil
-pages.times do |page|
-  
-  page += 1
-  
-  rino.queue do
+1.times do
+  #break
+  source_key = {}
+  rino = Rino::Tusk.new 10
+  pages = (Source.GetFields(per_page: 1)[:body]['count'].to_f/100).ceil
+  pages.times do |page|
     
-    call = Source.GetFields(page: page)
-    call[:body]['ticket_fields'].each do |field|
+    page += 1
+    
+    rino.queue do
       
-      source_key = source_key.merge(NW(field['title']) => field)
-      JP %{[#{field['type']}] :: #{field['title']}\n}
+      call = Source.GetFields(page: page)
+      call[:body]['ticket_fields'].each do |field|
+        
+        source_key = source_key.merge(NW(field['title']) => field)
+        JP %{[#{field['type']}] :: #{field['title']}\n}
+        
+      end
       
     end
     
   end
-  
+  rino.execute
+  Write 'source.json',source_key.to_json
+
 end
-rino.execute
-Write 'source.json',source_key.to_json
+
+
+duplicates = []
+source_key = JSON.parse GetFile('source.json')
+target_key = JSON.parse GetFile('target.json')
+target_key.each do |key,val|
+
+  if !SystemFields.include? val['type']
+
+    if source_key[key]
+      duplicates << val
+    end
+
+  end
+
+end
+duplicates.each do |field|
+
+  source_type = source_key[NW(field['title'])]['type']
+  JP source_type if source_type != field['type']
+
+end
